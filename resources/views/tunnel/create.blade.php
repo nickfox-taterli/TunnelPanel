@@ -11,8 +11,9 @@
       <form method="POST" action="{{ route('tunnel.store') }}">
       @csrf
           <div class="form-group">
+          <div class="col-md-12">
             <label for="client_ipv4">客户端公网IPv4：</label>
-            <div class="col-md-12">
+            
             <input id="client_ipv4" type="text" class="form-control @error('client_ipv4') is-invalid @enderror" name="client_ipv4" value="{{ old('client_ipv4') ?: $_SERVER['REMOTE_ADDR'] }}" required autocomplete="client_ipv4" autofocus>
 
             @error('client_ipv4')

@@ -21,7 +21,7 @@ class PagesController extends Controller
             return view('pages.root');
         }else{
             $tunnels = Tunnel::where('bind', '=', $user->id)->get();
-            $tunnels = Tunnel::all();
+            // $tunnels = Tunnel::all();
             return view('users.show', compact('user','tunnels'));
         }
 

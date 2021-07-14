@@ -19,7 +19,13 @@
       <th>{{$tunnel->server_ipv6}}</th>
       <th>{{$tunnel->client_ipv4}}</th>
       <th>{{$tunnel->client_ipv6}}</th>
-      <th><button class="btn-info" type="submit" name="button">更新/删除</button></th>
+      <th>
+         <form action="{{ route('tunnel.edit') }}" method="POST">
+            {{ csrf_field() }}
+            <input type="hidden" name="id" value="{{$tunnel->id}}">
+            <button class="btn-info" type="submit" name="button">操作</button>
+         </form>
+      </th>
       </tr>
       @endforeach
    </tbody>

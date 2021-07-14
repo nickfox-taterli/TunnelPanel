@@ -38,4 +38,7 @@ Route::post('email/resend', 'Auth\VerificationController@resend')->name('verific
 
 // 隧道相关
 Route::get('tunnel/create', 'TunnelController@create')->name('tunnel.create');
+Route::get('tunnel/ddns/{id}', 'TunnelController@ddns_update')->name('tunnel.ddns');
 Route::post('tunnel/create', 'TunnelController@store')->name('tunnel.store');
+Route::post('tunnel/edit', 'TunnelController@edit')->name('tunnel.edit');
+Route::post('tunnel/update', 'TunnelController@update')->name('tunnel.update');
