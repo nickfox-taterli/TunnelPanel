@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Tunnel;
 
 class PagesController extends Controller
 {
@@ -19,7 +20,9 @@ class PagesController extends Controller
         if($user == null){
             return view('pages.root');
         }else{
-            return view('users.show', compact('user'));
+            $tunnels = Tunnel::where('bind', '=', $user->id)->get();
+            $tunnels = Tunnel::all();
+            return view('users.show', compact('user','tunnels'));
         }
 
     }

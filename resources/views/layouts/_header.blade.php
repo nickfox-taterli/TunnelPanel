@@ -2,7 +2,7 @@
 <div class="container">
     <!-- Branding Image -->
     <a class="navbar-brand " href="{{ url('/') }}">
-    LaraBBS
+    TunnelBroker
     </a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
     <span class="navbar-toggler-icon"></span>
@@ -27,7 +27,7 @@
             {{ Auth::user()->name }}
             </a>
             <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-            <a class="dropdown-item" href="#">创建隧道</a>
+            <a class="dropdown-item" href="{{ route('tunnel.create') }}">创建隧道</a>
             <a class="dropdown-item" href="#">配置教程</a>
             <div class="dropdown-divider"></div>
             <a class="dropdown-item" id="logout" href="#">
