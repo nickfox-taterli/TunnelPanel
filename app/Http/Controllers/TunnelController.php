@@ -72,7 +72,7 @@ class TunnelController extends Controller
 
         // 添加网关IP
         $query = new \RouterOS\Query('/ipv6/address/add');
-        $query->equal('address', $this->link_prefix . $tunnel->id . ':2');
+        $query->equal('address', $this->link_prefix . $tunnel->id . ':2/112');
         $query->equal('advertise', 'no');
         $query->equal('disabled', 'no');
         $query->equal('eui-64', 'no');
