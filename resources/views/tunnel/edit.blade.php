@@ -51,8 +51,15 @@
                     </div>
                 </div>
 
-                <button type="submit" class="btn btn-primary">更新隧道</button> <a href="#" type="submit"
-                    class="btn btn-danger">隧道</a>
+                <button type="submit" class="btn btn-primary">更新隧道</button>
+                
+            </form>
+            <p></p>
+            <form action="{{ route('tunnel.delete') }}" method="POST">
+                {{ csrf_field() }}
+                <input type="hidden" name="id" value="{{$tunnel->id}}">
+                <input type="hidden" name="uuid" value="{{$tunnel->uuid}}">
+                <button class="btn btn-danger" type="submit" name="button">删除隧道</button>
             </form>
         </div>
     </div>

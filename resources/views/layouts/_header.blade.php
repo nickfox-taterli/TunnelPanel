@@ -28,7 +28,7 @@
             </a>
             <div class="dropdown-menu" aria-labelledby="navbarDropdown">
             <a class="dropdown-item" href="{{ route('tunnel.create') }}">创建隧道</a>
-            <a class="dropdown-item" href="#">配置教程</a>
+            <a class="dropdown-item" href="#" onClick="alert('我很懒,所以没有写.')") >配置教程</a>
             <div class="dropdown-divider"></div>
             <a class="dropdown-item" id="logout" href="#">
                 <form action="{{ route('logout') }}" method="POST">

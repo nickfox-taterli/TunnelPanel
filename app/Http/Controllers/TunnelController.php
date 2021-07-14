@@ -91,6 +91,34 @@ class TunnelController extends Controller
         return view('tunnel.edit', compact('user', 'tunnel'));
     }
 
+    public function delete(Request $request)
+    {
+        $user = Auth::user();
+        $this->authorize('update', $user);
+        Tunnel::where('bind', '=', $user->id)->find($request->id)->delete();
+
+        // 首先要登录路由器
+        $config = new \RouterOS\Config([
+            'host' => $this->local_ip,
+            'user' => 'admin',
+            'pass' => $this->router_password,
+            'port' => 8728,
+        ]);
+        $client = new \RouterOS\Client($config);
+
+        // 然后获取当前通道的ID
+        $query = new \RouterOS\Query('/interface/6to4/print');
+        $query->where('name', 'tunnel-' . $request->uuid);
+        $route_id = $client->query($query)->read()[0]['.id'];
+
+        // 然后修改它的远程地址
+        $query = new \RouterOS\Query('/interface/6to4/remove');
+        $query->equal('.id', $route_id);
+        $client->query($query)->read();
+
+        return redirect()->route('root');
+    }
+
     public function update(Request $request)
     {
         $user = Auth::user();

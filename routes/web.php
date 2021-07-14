@@ -42,3 +42,4 @@ Route::get('tunnel/ddns/{id}', 'TunnelController@ddns_update')->name('tunnel.ddn
 Route::post('tunnel/create', 'TunnelController@store')->name('tunnel.store');
 Route::post('tunnel/edit', 'TunnelController@edit')->name('tunnel.edit');
 Route::post('tunnel/update', 'TunnelController@update')->name('tunnel.update');
+Route::post('tunnel/delete', 'TunnelController@delete')->name('tunnel.delete');
