@@ -51,6 +51,20 @@
                     </div>
                 </div>
 
+                <div class="form-group row">
+                    <div class="col-md-12">
+                        <label for="remark">隧道名：</label>
+                        <input id="remark" type="text"
+                            class="form-control @error('remark') is-invalid @enderror" name="remark"
+                            value="{{ $tunnel->remark }}" required autocomplete="remark" autofocus>
+                        @error('remark')
+                        <span class="invalid-feedback" role="alert">
+                            <strong>{{ $message }}</strong>
+                        </span>
+                        @enderror
+                    </div>
+                </div>
+    
                 <button type="submit" class="btn btn-primary">更新隧道</button>
                 
             </form>

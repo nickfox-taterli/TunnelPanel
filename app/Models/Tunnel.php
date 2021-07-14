@@ -10,6 +10,7 @@ class Tunnel extends Model
     use HasFactory;
 
     protected $fillable = [
+        'remark',
         'uuid',
         'server_ipv4',
         'client_ipv4',

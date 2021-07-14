@@ -1,6 +1,7 @@
 <table class="table">
    <thead>
       <tr>
+         <th>Remark</th>
          <!-- <th>ID</th> -->
          <th>Server IPv4</th>
          <th>Server IPv6</th>
@@ -14,6 +15,7 @@
    <tbody>
       @foreach($tunnels as $tunnel)
       <tr>
+      <th>{{$tunnel->remark}}</th>
       <!-- <th>{{$tunnel->id}}</th> -->
       <th>{{$tunnel->server_ipv4}}</th>
       <th>{{$tunnel->server_ipv6}}</th>

@@ -5,22 +5,9 @@
 @section('content')
 
 <div class="row">
-
-  <div class="col-lg-2 col-md-2 hidden-sm hidden-xs user-info">
-    <div class="card ">
-      <img src="{{ $user->gravatar('140') }}" alt="{{ $user->name }}" class="gravatar"/>
-      <div class="card-body">
-            <h5>普通用户</h5>     
-      </div>
-    </div>
-  </div>
-  <div class="col-lg-10 col-md-10 col-sm-12 col-xs-12">
-    <div class="card ">
-      <div class="card-body">
-          <h1 class="mb-0" style="font-size:22px;">Hello {{ $user->name }},Welcome to TunnelBroker.</h1>
-      </div>
-    </div>
-    <hr>
+  <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+          <h1 class="center" style="font-size:22px;">隧道列表</h1>
+          <p></p>
     <div class="card ">
       <div class="card-body">
         @include('users.tunnel')

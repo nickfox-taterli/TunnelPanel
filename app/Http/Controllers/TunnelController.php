@@ -20,7 +20,7 @@ class TunnelController extends Controller
         $this->local_ip = env('ROUTER_IP');
         $this->link_prefix = env('ROUTER_PREFIX');
         $this->router_password = env('ROUTER_PASSWORD');
-        $this->middleware('auth');
+        $this->middleware('auth',['except' => ['ddns_update']]);
     }
 
     public function create()
@@ -36,12 +36,14 @@ class TunnelController extends Controller
         $this->authorize('update', $user);
         $this->validate($request, [
             'client_ipv4' => ['required', 'unique:tunnels,client_ipv4', 'ipv4', new \App\Rules\ClearnetIP],
+            'remark' => ['required'],
         ]);
 
         $uuid = Str::uuid();
 
         $tunnel = Tunnel::create([
             'uuid' => $uuid,
+            'remark' => $request->remark,
             'server_ipv4' => $this->local_ip,
             'client_ipv4' => $request->client_ipv4,
             'server_ipv6' => $uuid,
@@ -123,13 +125,15 @@ class TunnelController extends Controller
     {
         $user = Auth::user();
         $this->authorize('update', $user);
+      
         $this->validate($request, [
-            'client_ipv4' => ['required', 'unique:tunnels,client_ipv4', 'ipv4', new \App\Rules\ClearnetIP],
+            // 'client_ipv4' => ['required', 'unique:tunnels,client_ipv4', 'ipv4', new \App\Rules\ClearnetIP],
+            'remark' => ['required'],
         ]);
 
         if (Tunnel::where('bind', '=', $user->id)->find($request->id) != null) {
             // 我实在是没办法了,我知道这样写不太好.
-            DB::table('tunnels')->where('id', $request->id)->update(['client_ipv4' => $request->client_ipv4]);
+            DB::table('tunnels')->where('id', $request->id)->update(['client_ipv4' => $request->client_ipv4,'remark' => $request->remark]);
 
             // 首先要登录路由器
             $config = new \RouterOS\Config([
