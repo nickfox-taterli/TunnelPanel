@@ -20,7 +20,7 @@ class TunnelController extends Controller
         $this->local_ip = env('ROUTER_IP');
         $this->link_prefix = env('ROUTER_PREFIX');
         $this->router_password = env('ROUTER_PASSWORD');
-        $this->middleware('auth',['except' => ['ddns_update']]);
+        $this->middleware('auth', ['except' => ['ddns_update']]);
     }
 
     public function create()
@@ -108,6 +108,17 @@ class TunnelController extends Controller
         ]);
         $client = new \RouterOS\Client($config);
 
+        // 删除了接口前要删除地址
+        $query = new \RouterOS\Query('/ipv6/address/print');
+        $result = $client->query($query)->read();
+        foreach ($result as $key => $value) {
+            if ($value['interface'] == 'tunnel-' . $request->uuid) {
+                $query = new \RouterOS\Query('/ipv6/address/remove');
+                $query->equal('.id', $value['.id']);
+                $client->query($query)->read();
+            }
+        }
+
         // 然后获取当前通道的ID
         $query = new \RouterOS\Query('/interface/6to4/print');
         $query->where('name', 'tunnel-' . $request->uuid);
@@ -125,7 +136,7 @@ class TunnelController extends Controller
     {
         $user = Auth::user();
         $this->authorize('update', $user);
-      
+
         $this->validate($request, [
             // 'client_ipv4' => ['required', 'unique:tunnels,client_ipv4', 'ipv4', new \App\Rules\ClearnetIP],
             'remark' => ['required'],
@@ -133,7 +144,7 @@ class TunnelController extends Controller
 
         if (Tunnel::where('bind', '=', $user->id)->find($request->id) != null) {
             // 我实在是没办法了,我知道这样写不太好.
-            DB::table('tunnels')->where('id', $request->id)->update(['client_ipv4' => $request->client_ipv4,'remark' => $request->remark]);
+            DB::table('tunnels')->where('id', $request->id)->update(['client_ipv4' => $request->client_ipv4, 'remark' => $request->remark]);
 
             // 首先要登录路由器
             $config = new \RouterOS\Config([
