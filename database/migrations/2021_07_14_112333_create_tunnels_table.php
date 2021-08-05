@@ -21,6 +21,7 @@ class CreateTunnelsTable extends Migration
             $table->string('client_ipv4')->unique()->comment('客户端公网IPv4.');
             $table->string('server_ipv6')->unique()->comment('服务器IPv6.');
             $table->string('client_ipv6')->unique()->comment('客户端IPv6.'); 
+            $table->string('routed_ipv6')->unique()->comment('可路由IPv6.'); 
             $table->bigInteger('bind')->comment('关联的管理员ID'); // 和数据库的ID绑定,每个用户创5条隧道.
             $table->timestamps(); // 用户创建以及最后汇报时间都在这里.
         });

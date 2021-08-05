@@ -47,17 +47,27 @@ class TunnelController extends Controller
             'remark' => $request->remark,
             'server_ipv4' => $this->local_ip,
             'client_ipv4' => $request->client_ipv4,
-            'server_ipv6' => "::1/128",
-            'client_ipv6' => "::1/128",
+            'server_ipv6' => $uuid,
+            'client_ipv6' => $uuid,
+            'routed_ipv6' => $uuid, // 临时填充的
             'bind' => $user->id,
         ]);
 
         $range = \IPLib\Factory::parseRangeString($this->link_prefix);
-        if($range->getSize() < ($this->step * ($tunnel->id - 1))){
+        if($tunnel->id > 32767){
             die('IP exhaustion!');
         }
 
-        DB::table('tunnels')->where('id', $tunnel->id)->update(['server_ipv6' => $range->getAddressAtOffset(($this->step * ($tunnel->id - 2)) + 2).'/127', 'client_ipv6' => $range->getAddressAtOffset(($this->step * ($tunnel->id - 2)) + 3).'/127']);
+        $id = $tunnel->id;
+
+        $link_address = $range->getAddressAtOffset((2 * ($id - 1)) * 65536)->toString(true);
+        $link_prefix = \IPLib\Factory::parseRangeString(substr($link_address,0,strlen($link_address) - 4).'*')->asSubnet()->toString(false);
+        $route_address = $range->getAddressAtOffset((2 * ($id - 1)) * 65536 + 65536)->toString(true);
+        $route_prefix = \IPLib\Factory::parseRangeString(substr($route_address,0,strlen($route_address) - 4).'*')->asSubnet()->toString(false);
+        $first_address = \IPLib\Factory::parseRangeString($link_prefix)->getAddressAtOffset(1)->toString(false);
+        $second_address = \IPLib\Factory::parseRangeString($link_prefix)->getAddressAtOffset(mt_rand(2,65535))->toString(false);
+
+        DB::table('tunnels')->where('id', $tunnel->id)->update(['server_ipv6' => $first_address, 'client_ipv6' => $second_address,'routed_ipv6' => $route_prefix]);
 
         $config = new \RouterOS\Config([
             'host' => $this->local_ip,
@@ -78,11 +88,17 @@ class TunnelController extends Controller
 
         // 添加网关IP
         $query = new \RouterOS\Query('/ipv6/address/add');
-        $query->equal('address', $range->getAddressAtOffset(($this->step * ($tunnel->id - 2)) + 2).'/127');
+        $query->equal('address', $first_address);
         $query->equal('advertise', 'no');
         $query->equal('disabled', 'no');
         $query->equal('eui-64', 'no');
         $query->equal('interface', 'tunnel-' . $uuid);
+        $client->query($query)->read();
+
+        // 添加可路由部分
+        $query = new \RouterOS\Query('/ipv6/route/add');
+        $query->equal('dst-address', $route_prefix);
+        $query->equal('gateway', 'tunnel-' . $uuid);
         $client->query($query)->read();
 
         return redirect()->route('root');
@@ -113,6 +129,17 @@ class TunnelController extends Controller
             'port' => 8728,
         ]);
         $client = new \RouterOS\Client($config);
+
+        // 要删除可路由块
+        $query = new \RouterOS\Query('/ipv6/route/print');
+        $result = $client->query($query)->read();
+        foreach ($result as $key => $value) {
+            if ($value['gateway'] == 'tunnel-' . $request->uuid) {
+                $query = new \RouterOS\Query('/ipv6/route/remove');
+                $query->equal('.id', $value['.id']);
+                $client->query($query)->read();
+            }
+        }
 
         // 删除了接口前要删除地址
         $query = new \RouterOS\Query('/ipv6/address/print');

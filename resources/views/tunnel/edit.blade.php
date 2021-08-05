@@ -22,15 +22,24 @@
                 <div class="form-group row">
                     <div class="col-md-12">
 
+                        <label for="client_ipv4">可路由前缀：</label>
+                        <input type="text" disabled class="form-control"
+                            value="{{ $tunnel->routed_ipv6 }}">
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <div class="col-md-12">
+
                         <label for="client_ipv4">Debian/Ubuntu/CentOS配置参考：</label>
                         <textarea type="textarea" rows="9" cols="75" disabled class="form-control">auto taterli-ipv6
  iface taterli-ipv6 inet6 v4tunnel
-  address {{ explode('/',$tunnel->client_ipv6)[0] }}
-  netmask 127
+  address {{ $tunnel->client_ipv6 }}
+  netmask 112
   endpoint {{ $tunnel->server_ipv4 }}
   local {{ $tunnel->client_ipv4 }}
   ttl 255
-  gateway {{ explode('/',$tunnel->server_ipv6)[0] }}
+  gateway {{ $tunnel->server_ipv6 }}
   mtu 1280</textarea>
                     </div>
                 </div>
