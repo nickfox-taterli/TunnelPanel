@@ -44,3 +44,4 @@ Route::post('tunnel/edit', 'TunnelController@edit')->name('tunnel.edit');
 Route::post('tunnel/update', 'TunnelController@update')->name('tunnel.update');
 Route::post('tunnel/delete', 'TunnelController@delete')->name('tunnel.delete');
 
+Route::get('test', 'TunnelController@test')->name('tunnel.test');

@@ -57,7 +57,7 @@ class TunnelController extends Controller
             die('IP exhaustion!');
         }
 
-        DB::table('tunnels')->where('id', $tunnel->id)->update(['server_ipv6' => $range->getAddressAtOffset(($this->step * ($tunnel->id - 1)) + 1), 'client_ipv6' => $range->getAddressAtOffset(($this->step * ($tunnel->id - 1)) + 2)]);
+        DB::table('tunnels')->where('id', $tunnel->id)->update(['server_ipv6' => $range->getAddressAtOffset(($this->step * ($tunnel->id - 1)) + 1).'/127', 'client_ipv6' => $range->getAddressAtOffset(($this->step * ($tunnel->id - 1)) + 2).'/127']);
 
         $config = new \RouterOS\Config([
             'host' => $this->local_ip,
