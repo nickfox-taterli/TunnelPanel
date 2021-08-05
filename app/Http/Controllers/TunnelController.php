@@ -154,7 +154,7 @@ class TunnelController extends Controller
 
             // 首先要登录路由器
             $config = new \RouterOS\Config([
-                'host' => $this->local_ip,
+                'host' => Tunnel::where('bind', '=', $user->id)->find($request->id)->server_ipv4,
                 'user' => 'admin',
                 'pass' => $this->router_password,
                 'port' => 8728,
@@ -187,7 +187,7 @@ class TunnelController extends Controller
 
                 // 首先要登录路由器
                 $config = new \RouterOS\Config([
-                    'host' => $this->local_ip,
+                    'host' => Tunnel::where('bind', '=', $user->id)->find($request->id)->server_ipv4,
                     'user' => 'admin',
                     'pass' => $this->router_password,
                     'port' => 8728,
