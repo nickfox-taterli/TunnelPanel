@@ -47,8 +47,8 @@ class TunnelController extends Controller
             'remark' => $request->remark,
             'server_ipv4' => $this->local_ip,
             'client_ipv4' => $request->client_ipv4,
-            'server_ipv6' => $uuid,
-            'client_ipv6' => $uuid,
+            'server_ipv6' => "::1/128",
+            'client_ipv6' => "::1/128",
             'bind' => $user->id,
         ]);
 
