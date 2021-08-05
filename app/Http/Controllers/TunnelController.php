@@ -57,7 +57,7 @@ class TunnelController extends Controller
             die('IP exhaustion!');
         }
 
-        DB::table('tunnels')->where('id', $tunnel->id)->update(['server_ipv6' => $range->getAddressAtOffset(($this->step * ($tunnel->id - 1)) + 1).'/127', 'client_ipv6' => $range->getAddressAtOffset(($this->step * ($tunnel->id - 1)) + 2).'/127']);
+        DB::table('tunnels')->where('id', $tunnel->id)->update(['server_ipv6' => $range->getAddressAtOffset(($this->step * ($tunnel->id - 1)) + 2).'/127', 'client_ipv6' => $range->getAddressAtOffset(($this->step * ($tunnel->id - 1)) + 3).'/127']);
 
         $config = new \RouterOS\Config([
             'host' => $this->local_ip,
@@ -78,12 +78,12 @@ class TunnelController extends Controller
 
         // 添加网关IP
         $query = new \RouterOS\Query('/ipv6/address/add');
-        $query->equal('address', $range->getAddressAtOffset(($this->step * ($tunnel->id - 1)) + 1).'/127');
+        $query->equal('address', $range->getAddressAtOffset(($this->step * ($tunnel->id - 1)) + 2).'/127');
         $query->equal('advertise', 'no');
         $query->equal('disabled', 'no');
         $query->equal('eui-64', 'no');
         $query->equal('interface', 'tunnel-' . $uuid);
-        $client->query($query)->read();
+        dd($client->query($query)->read());
 
         return redirect()->route('root');
     }
