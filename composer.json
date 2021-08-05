@@ -12,6 +12,7 @@
         "guzzlehttp/guzzle": "^7.0.1",
         "laravel/framework": "^8.40",
         "laravel/tinker": "^2.5",
+        "mlocati/ip-lib": "^1.17",
         "overtrue/laravel-lang": "~4.0"
     },
     "require-dev": {

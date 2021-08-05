@@ -20,6 +20,7 @@ class TunnelController extends Controller
         $this->local_ip = env('ROUTER_IP');
         $this->link_prefix = env('ROUTER_PREFIX');
         $this->router_password = env('ROUTER_PASSWORD');
+        $this->step = 2;
         $this->middleware('auth', ['except' => ['ddns_update']]);
     }
 
@@ -51,7 +52,12 @@ class TunnelController extends Controller
             'bind' => $user->id,
         ]);
 
-        DB::table('tunnels')->where('id', $tunnel->id)->update(['server_ipv6' => $this->link_prefix . $tunnel->id . ':2', 'client_ipv6' => $this->link_prefix . $tunnel->id . ':1']);
+        $range = \IPLib\Factory::parseRangeString($this->link_prefix);
+        if($range->getSize() < ($this->step * ($tunnel->id - 1))){
+            die('IP exhaustion!');
+        }
+
+        DB::table('tunnels')->where('id', $tunnel->id)->update(['server_ipv6' => $range->getAddressAtOffset(($this->step * ($tunnel->id - 1)) + 1), 'client_ipv6' => $range->getAddressAtOffset(($this->step * ($tunnel->id - 1)) + 2)]);
 
         $config = new \RouterOS\Config([
             'host' => $this->local_ip,
