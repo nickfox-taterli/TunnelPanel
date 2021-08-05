@@ -83,7 +83,7 @@ class TunnelController extends Controller
         $query->equal('disabled', 'no');
         $query->equal('eui-64', 'no');
         $query->equal('interface', 'tunnel-' . $uuid);
-        dd($client->query($query)->read());
+        $client->query($query)->read();
 
         return redirect()->route('root');
     }

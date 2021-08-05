@@ -25,12 +25,12 @@
                         <label for="client_ipv4">Debian/Ubuntu/CentOS配置参考：</label>
                         <textarea type="textarea" rows="9" cols="75" disabled class="form-control">auto taterli-ipv6
  iface taterli-ipv6 inet6 v4tunnel
-  address {{ $tunnel->client_ipv6 }}
+  address {{ explode('/',$tunnel->client_ipv6)[0] }}
   netmask 127
   endpoint {{ $tunnel->server_ipv4 }}
   local {{ $tunnel->client_ipv4 }}
   ttl 255
-  gateway {{ $tunnel->server_ipv6 }}
+  gateway {{ explode('/',$tunnel->server_ipv6)[0] }}
   mtu 1280</textarea>
                     </div>
                 </div>
