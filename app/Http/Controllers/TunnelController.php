@@ -15,8 +15,8 @@ class TunnelController extends Controller
 
     public function __construct()
     {
-        $this->api_url = 'http://127.0.0.1:49080'; // 末尾请不要带斜杠
-        $this->prefix = '2a0f:9400:7722::/48';
+        $this->api_url = env('ROUTE_API_URL');
+        $this->prefix = env('IPV6_PREFIX');
         $this->middleware('auth', ['except' => ['ddns_update']]);
     }
 
