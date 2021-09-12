@@ -17,6 +17,7 @@ class TunnelController extends Controller
     {
         $this->api_url = env('ROUTE_API_URL');
         $this->prefix = env('IPV6_PREFIX');
+        $this->server_ipv4 = env('SERVER_IPV4');
         $this->middleware('auth', ['except' => ['ddns_update']]);
     }
 
@@ -41,7 +42,7 @@ class TunnelController extends Controller
         $tunnel = Tunnel::create([
             'uuid' => $uuid,
             'remark' => $request->remark,
-            'server_ipv4' => '23.94.26.137',
+            'server_ipv4' => $this->server_ipv4,
             'client_ipv4' => $request->client_ipv4,
             'server_ipv6' => $uuid,
             'client_ipv6' => $uuid,
