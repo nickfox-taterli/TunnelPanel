@@ -56,9 +56,9 @@ class TunnelController extends Controller
 
         $id = $tunnel->id;
 
-        $route_prefix = str_replace('::/48',':'.dechex(($id - 1)*2 + 2).'::/48',$this->prefix);
-        $client_ipv6 = str_replace('::/48',':'.dechex(($id - 1)*2 + 1).'::1',$this->prefix);
-        $server_ipv6 = str_replace('::/48',':'.dechex(($id - 1)*2 + 1).'::2',$this->prefix);
+        $route_prefix = str_replace('::/64',':'.dechex(($id - 1)*2 + 2).'::/48',$this->prefix);
+        $client_ipv6 = str_replace('::/64',':'.dechex(($id - 1)*2 + 1).'::1',$this->prefix);
+        $server_ipv6 = str_replace('::/64',':'.dechex(($id - 1)*2 + 1).'::2',$this->prefix);
 
         DB::table('tunnels')->where('id', $tunnel->id)->update(['server_ipv6' => $server_ipv6, 'client_ipv6' => $client_ipv6,'routed_ipv6' => $route_prefix]);
 
