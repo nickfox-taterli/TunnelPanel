@@ -35,7 +35,7 @@
                         <textarea type="textarea" rows="9" cols="75" disabled class="form-control">auto taterli-ipv6
  iface taterli-ipv6 inet6 v4tunnel
   address {{ $tunnel->client_ipv6 }}
-  netmask 112
+  netmask 64
   endpoint {{ $tunnel->server_ipv4 }}
   local {{ $tunnel->client_ipv4 }}
   ttl 255

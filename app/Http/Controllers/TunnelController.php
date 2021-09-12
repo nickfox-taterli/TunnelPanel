@@ -10,17 +10,13 @@ use Illuminate\Support\Str;
 
 class TunnelController extends Controller
 {
-    private $local_ip; // 修改为路由器IP
-    private $link_prefix; // 修改为需要分配的前缀,目前只支持96.
-    private $router_password; // 路由器密码
-    //
+    private $api_url;
+    private $prefix;
 
     public function __construct()
     {
-        $this->local_ip = env('ROUTER_IP');
-        $this->link_prefix = env('ROUTER_PREFIX');
-        $this->router_password = env('ROUTER_PASSWORD');
-        $this->step = 2;
+        $this->api_url = 'http://127.0.0.1:49080'; // 末尾请不要带斜杠
+        $this->prefix = '2a0f:9400:7722::/48';
         $this->middleware('auth', ['except' => ['ddns_update']]);
     }
 
@@ -45,7 +41,7 @@ class TunnelController extends Controller
         $tunnel = Tunnel::create([
             'uuid' => $uuid,
             'remark' => $request->remark,
-            'server_ipv4' => $this->local_ip,
+            'server_ipv4' => '23.94.26.137',
             'client_ipv4' => $request->client_ipv4,
             'server_ipv6' => $uuid,
             'client_ipv6' => $uuid,
@@ -53,53 +49,19 @@ class TunnelController extends Controller
             'bind' => $user->id,
         ]);
 
-        $range = \IPLib\Factory::parseRangeString($this->link_prefix);
         if($tunnel->id > 32767){
             die('IP exhaustion!');
         }
 
         $id = $tunnel->id;
 
-        $link_address = $range->getAddressAtOffset((2 * ($id - 1)) * 65536)->toString(true);
-        $link_prefix = \IPLib\Factory::parseRangeString(substr($link_address,0,strlen($link_address) - 4).'*')->asSubnet()->toString(false);
-        $route_address = $range->getAddressAtOffset((2 * ($id - 1)) * 65536 + 65536)->toString(true);
-        $route_prefix = \IPLib\Factory::parseRangeString(substr($route_address,0,strlen($route_address) - 4).'*')->asSubnet()->toString(false);
-        $first_address = \IPLib\Factory::parseRangeString($link_prefix)->getAddressAtOffset(1)->toString(false);
-        $second_address = \IPLib\Factory::parseRangeString($link_prefix)->getAddressAtOffset(mt_rand(2,65535))->toString(false);
+        $route_prefix = str_replace('::/48',':'.dechex($id*2 + 2).'::1',$this->prefix);
+        $client_ipv6 = str_replace('::/48',':'.dechex($id*2 + 1).'::1',$this->prefix);
+        $server_ipv6 = str_replace('::/48',':'.dechex($id*2 + 1).'::2',$this->prefix);
 
-        DB::table('tunnels')->where('id', $tunnel->id)->update(['server_ipv6' => $first_address, 'client_ipv6' => $second_address,'routed_ipv6' => $route_prefix]);
+        DB::table('tunnels')->where('id', $tunnel->id)->update(['server_ipv6' => $server_ipv6, 'client_ipv6' => $client_ipv6,'routed_ipv6' => $route_prefix]);
 
-        $config = new \RouterOS\Config([
-            'host' => $this->local_ip,
-            'user' => 'admin',
-            'pass' => $this->router_password,
-            'port' => 8728,
-        ]);
-        $client = new \RouterOS\Client($config);
-
-        // 添加隧道接口
-        $query = new \RouterOS\Query('/interface/6to4/add');
-        $query->equal('disabled', 'no');
-        $query->equal('local-address', $this->local_ip);
-        $query->equal('mtu', '1280');
-        $query->equal('name', 'tunnel-' . $uuid);
-        $query->equal('remote-address', $request->client_ipv4);
-        $client->query($query)->read();
-
-        // 添加网关IP
-        $query = new \RouterOS\Query('/ipv6/address/add');
-        $query->equal('address', $first_address);
-        $query->equal('advertise', 'no');
-        $query->equal('disabled', 'no');
-        $query->equal('eui-64', 'no');
-        $query->equal('interface', 'tunnel-' . $uuid);
-        $client->query($query)->read();
-
-        // 添加可路由部分
-        $query = new \RouterOS\Query('/ipv6/route/add');
-        $query->equal('dst-address', $route_prefix);
-        $query->equal('gateway', 'tunnel-' . $uuid);
-        $client->query($query)->read();
+        file_get_contents($this->api_url.'/add/'.$tunnel->id.'/'.$request->client_ipv4);
 
         return redirect()->route('root');
     }
@@ -121,46 +83,7 @@ class TunnelController extends Controller
         $this->authorize('update', $user);
         Tunnel::where('bind', '=', $user->id)->find($request->id)->delete();
 
-        // 首先要登录路由器
-        $config = new \RouterOS\Config([
-            'host' => $this->local_ip,
-            'user' => 'admin',
-            'pass' => $this->router_password,
-            'port' => 8728,
-        ]);
-        $client = new \RouterOS\Client($config);
-
-        // 要删除可路由块
-        $query = new \RouterOS\Query('/ipv6/route/print');
-        $result = $client->query($query)->read();
-        foreach ($result as $key => $value) {
-            if ($value['gateway'] == 'tunnel-' . $request->uuid) {
-                $query = new \RouterOS\Query('/ipv6/route/remove');
-                $query->equal('.id', $value['.id']);
-                $client->query($query)->read();
-            }
-        }
-
-        // 删除了接口前要删除地址
-        $query = new \RouterOS\Query('/ipv6/address/print');
-        $result = $client->query($query)->read();
-        foreach ($result as $key => $value) {
-            if ($value['interface'] == 'tunnel-' . $request->uuid) {
-                $query = new \RouterOS\Query('/ipv6/address/remove');
-                $query->equal('.id', $value['.id']);
-                $client->query($query)->read();
-            }
-        }
-
-        // 然后获取当前通道的ID
-        $query = new \RouterOS\Query('/interface/6to4/print');
-        $query->where('name', 'tunnel-' . $request->uuid);
-        $route_id = $client->query($query)->read()[0]['.id'];
-
-        // 然后修改它的远程地址
-        $query = new \RouterOS\Query('/interface/6to4/remove');
-        $query->equal('.id', $route_id);
-        $client->query($query)->read();
+        file_get_contents($this->api_url.'/del/'.Tunnel::where('bind', '=', $user->id)->find($request->id)->id);
 
         return redirect()->route('root');
     }
@@ -171,33 +94,14 @@ class TunnelController extends Controller
         $this->authorize('update', $user);
 
         $this->validate($request, [
-            // 'client_ipv4' => ['required', 'unique:tunnels,client_ipv4', 'ipv4', new \App\Rules\ClearnetIP],
+            'client_ipv4' => ['required', 'unique:tunnels,client_ipv4', 'ipv4', new \App\Rules\ClearnetIP],
             'remark' => ['required'],
         ]);
 
         if (Tunnel::where('bind', '=', $user->id)->find($request->id) != null) {
             // 我实在是没办法了,我知道这样写不太好.
             DB::table('tunnels')->where('id', $request->id)->update(['client_ipv4' => $request->client_ipv4, 'remark' => $request->remark]);
-
-            // 首先要登录路由器
-            $config = new \RouterOS\Config([
-                'host' => Tunnel::where('bind', '=', $user->id)->find($request->id)->server_ipv4,
-                'user' => 'admin',
-                'pass' => $this->router_password,
-                'port' => 8728,
-            ]);
-            $client = new \RouterOS\Client($config);
-
-            // 然后获取当前通道的ID
-            $query = new \RouterOS\Query('/interface/6to4/print');
-            $query->where('name', 'tunnel-' . $request->uuid);
-            $route_id = $client->query($query)->read()[0]['.id'];
-
-            // 然后修改它的远程地址
-            $query = new \RouterOS\Query('/interface/6to4/set');
-            $query->equal('.id', $route_id);
-            $query->equal('remote-address', $request->client_ipv4);
-            $client->query($query)->read();
+            file_get_contents($this->api_url.'/add/'.Tunnel::where('bind', '=', $user->id)->find($request->id)->id.'/'.$request->client_ipv4);
         }
         return redirect()->route('root');
     }
@@ -211,26 +115,7 @@ class TunnelController extends Controller
             }
             if ($request->ip() != $result->client_ipv4) {
                 DB::table('tunnels')->where('uuid', $request->id)->update(['client_ipv4' => $request->ip(), 'updated_at' => \Carbon\Carbon::now()]);
-
-                // 首先要登录路由器
-                $config = new \RouterOS\Config([
-                    'host' => Tunnel::where('bind', '=', $user->id)->find($request->id)->server_ipv4,
-                    'user' => 'admin',
-                    'pass' => $this->router_password,
-                    'port' => 8728,
-                ]);
-                $client = new \RouterOS\Client($config);
-
-                // 然后获取当前通道的ID
-                $query = new \RouterOS\Query('/interface/6to4/print');
-                $query->where('name', 'tunnel-' . $request->id);
-                $route_id = $client->query($query)->read()[0]['.id'];
-
-                // 然后修改它的远程地址
-                $query = new \RouterOS\Query('/interface/6to4/set');
-                $query->equal('.id', $route_id);
-                $query->equal('remote-address', $request->ip());
-                $client->query($query)->read();
+                file_get_contents($this->api_url.'/add/'.$result->id.'/'.$request->ip());
             }
         }
         return $request->ip();
