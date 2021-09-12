@@ -55,7 +55,7 @@ class TunnelController extends Controller
 
         $id = $tunnel->id;
 
-        $route_prefix = str_replace('::/48',':'.dechex(($id - 1)*2 + 2).'::1',$this->prefix);
+        $route_prefix = str_replace('::/48',':'.dechex(($id - 1)*2 + 2).'::/48',$this->prefix);
         $client_ipv6 = str_replace('::/48',':'.dechex(($id - 1)*2 + 1).'::1',$this->prefix);
         $server_ipv6 = str_replace('::/48',':'.dechex(($id - 1)*2 + 1).'::2',$this->prefix);
 
